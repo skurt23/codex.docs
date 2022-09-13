@@ -30,16 +30,21 @@ export default class Writing {
       removeButton: null,
       parentIdSelector: null,
       putAboveIdSelector: null,
-      uriInput: null
+      uriInput: null,
     };
   }
 
   /**
    * Called by ModuleDispatcher to initialize module from DOM
+   *
    * @param {writingSettings} settings - module settings
    * @param {HTMLElement} moduleEl - module element
    */
-  init(settings = {}, moduleEl) {
+  init(settings, moduleEl) {
+    if (settings === undefined) {
+      settings = {};
+    }
+
     /**
      * Create Editor
      */
@@ -54,7 +59,7 @@ export default class Writing {
 
     window.onbeforeunload = (e) => {
       return '';
-    }
+    };
 
     /**
      * Activate form elements
@@ -91,24 +96,28 @@ export default class Writing {
 
   /**
    * Loads class for working with Editor
-   * @return {Promise<Editor>}
+   *
+   * @returns {Promise<Editor>}
    */
   async loadEditor() {
     const { default: Editor } = await import(/* webpackChunkName: "editor" */ './../classes/editor');
 
-    const editorConfig = this.page ? {
-      data: this.page.body
-    } : {};
+    const editorConfig = this.page
+      ? {
+        data: this.page.body,
+      }
+      : {};
 
     return new Editor(editorConfig, {
-      headerPlaceholder: 'Enter a title'
+      headerPlaceholder: 'Enter a title',
     });
   }
 
   /**
    * Returns all writing form data
+   *
    * @throws {Error} - validation error
-   * @return {Promise.<{parent: string, body: {editorData}}>}
+   * @returns {Promise.<{parent: string, body: {editorData}}>}
    */
   async getData() {
     const editorData = await this.editor.save();
@@ -139,7 +148,7 @@ export default class Writing {
       parent: this.nodes.parentIdSelector.value,
       putAbovePageId: putAbovePageId,
       uri: uri,
-      body: editorData
+      body: editorData,
     };
   }
 
@@ -155,9 +164,9 @@ export default class Writing {
         let response = await fetch(endpoint, {
           method: this.page ? 'POST' : 'PUT',
           headers: {
-            'Content-Type': 'application/json; charset=utf-8'
+            'Content-Type': 'application/json; charset=utf-8',
           },
-          body: JSON.stringify(writingData)
+          body: JSON.stringify(writingData),
         });
 
         response = await response.json();
@@ -185,7 +194,7 @@ export default class Writing {
       const endpoint = this.page ? '/api/page/' + this.page._id : '';
 
       let response = await fetch(endpoint, {
-        method: 'DELETE'
+        method: 'DELETE',
       });
 
       response = await response.json();
