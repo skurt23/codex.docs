@@ -73,10 +73,44 @@
     }
   }
 
+  &__search {
+    @apply --input;
+
+    appearance: none;
+    background: url("../svg/search.svg") left 10px center no-repeat;
+    background-color: var(--color-input-primary);
+    border: 1px solid transparent;
+    border-radius: 8px;
+    padding: 8px 35px;
+    padding-right: 45px;
+    line-height: 21px;
+
+    &-wrapper-mac::after {
+      color: var(--color-button-secondary);
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 17px;
+      content: "⌘ P";
+      margin-left: -50px;
+    }
+
+    &-wrapper-other::after {
+      color: var(--color-button-secondary);
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 17px;
+      content: "Ctrl P";
+      margin-left: -50px;
+    }
+  }
 
   &__section {
     overflow: hidden;
     flex-shrink: 0;
+
+    &--hidden {
+      display: none;
+    }
 
     &--animated {
       .docs-sidebar__section-list {
@@ -137,6 +171,12 @@
     transition-duration: 0.1s;
 
     @apply --squircle;
+
+    &--selected {
+      border-radius: 8px;
+      /* border using box-shadow which doesn't increase the height */
+      box-shadow: 0 0 0 2px rgba(147, 166, 233, 0.5) inset;
+    }
   }
 
   &__section-title > span,
@@ -153,10 +193,12 @@
     }
   }
 
-
   &__section-list-item-wrapper {
     padding: 1px 0;
     display: block;
+    &--hidden {
+      display: none !important;
+    }
   }
 
   li:last-child {
@@ -164,7 +206,6 @@
       padding-bottom: 0;
     }
   }
-
 
   &__section-title:not(&__section-title--active),
   &__section-list-item:not(&__section-list-item--active) {
@@ -177,12 +218,12 @@
 
   &__section-title--active,
   &__section-list-item--active {
-    background: linear-gradient(270deg, #129BFF 0%, #8A53FF 100%);
+    background: linear-gradient(270deg, #129bff 0%, #8a53ff 100%);
     color: white;
 
     @media (--can-hover) {
       .docs-sidebar__section-toggler:hover {
-        background: rgba(0,0,0,0.3);
+        background: rgba(0, 0, 0, 0.3);
       }
     }
   }
@@ -218,7 +259,6 @@
       display: block;
     }
   }
-
 
   &__toggler {
     color: var(--color-text-second);
@@ -268,7 +308,7 @@
       display: block;
     }
 
-    &-image{
+    &-image {
       display: inline-flex;
     }
 
@@ -283,5 +323,4 @@
       padding: 8px;
     }
   }
-
 }
