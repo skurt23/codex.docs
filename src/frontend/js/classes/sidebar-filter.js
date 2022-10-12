@@ -1,7 +1,16 @@
 /**
  * HEIGHT of the header in px
  */
-const HEADER_HEIGHT = 56;
+const HEADER_HEIGHT = parseInt(window.getComputedStyle(
+  document.documentElement).getPropertyValue('--layout-height-header'));
+
+/**
+ * Enum for the direction of the navigation during the filtering.
+ */
+const Direction = {
+  Next: 1,
+  Previous: 2,
+};
 
 /**
  * Sidebar Search module.
@@ -22,8 +31,7 @@ export default class SidebarFilter {
       sectionListItem: 'docs-sidebar__section-list-item',
       sectionListItemWrapperHidden: 'docs-sidebar__section-list-item-wrapper--hidden',
       sectionListItemSlelected: 'docs-sidebar__section-list-item--selected',
-      sidebarSearchWrapperMac: 'docs-sidebar__search-wrapper-mac',
-      sidebarSearchWrapperOther: 'docs-sidebar__search-wrapper-other',
+      sidebarSearchWrapper: 'docs-sidebar__search-wrapper',
     };
   }
 
@@ -56,18 +64,17 @@ export default class SidebarFilter {
     this.sidebarContent = sidebarContent;
     this.search = search;
     this.setSectionCollapsed = setSectionCollapsed;
-    let className = SidebarFilter.CSS.sidebarSearchWrapperOther;
+    let shortcutText = 'Ctrl P';
 
     // Search initialize with platform specific shortcut.
-    if (window.navigator.userAgent.indexOf('Mac') != -1) {
-      className = SidebarFilter.CSS.sidebarSearchWrapperMac;
+    if (window.navigator.userAgent.indexOf('Mac') !== -1) {
+      shortcutText = '⌘ P';
     }
-    this.search.parentElement.classList.add(className);
+      shortcutText = '⌘ P';
+    this.search.parentElement.setAttribute('data-shortcut', shortcutText);
 
     // Initialize search input.
     this.search.value = '';
-    // Initialize the search results.
-    this.filter('');
 
     // Add event listener for search input.
     this.search.addEventListener('input', e => {
@@ -111,9 +118,17 @@ export default class SidebarFilter {
       const prevSelectedSearchResultIndex = this.selectedSearchResultIndex;
 
       // get next item to be focus.
-      this.selectedSearchResultIndex = this.getNextTitleOrItemIndex(e.code,
-        this.selectedSearchResultIndex,
-        this.searchResults.length - 1);
+      if (e.code === 'ArrowUp') {
+        this.selectedSearchResultIndex = this.getNextIndex(
+          Direction.Previous,
+          this.selectedSearchResultIndex,
+          this.searchResults.length - 1);
+      } else if (e.code === 'ArrowDown') {
+        this.selectedSearchResultIndex = this.getNextIndex(
+          Direction.Next,
+          this.selectedSearchResultIndex,
+          this.searchResults.length - 1);
+      }
 
       // blur previous focused item.
       this.blurTitleOrItem(prevSelectedSearchResultIndex);
@@ -128,17 +143,17 @@ export default class SidebarFilter {
   }
 
   /**
-   * Get next title or item index.
+   * Get index of next item to be focused.
    *
-   * @param {string} code - Key code for navigation.
+   * @param {number} direction - direction for navigation.
    * @param {number} titleOrItemIndex - Current title or item index.
    * @param {number} maxNumberOfTitlesOrItems - Max number of titles or items.
    * @returns {number} - Next section or item index.
    */
-  getNextTitleOrItemIndex(code, titleOrItemIndex, maxNumberOfTitlesOrItems) {
+  getNextIndex(direction, titleOrItemIndex, maxNumberOfTitlesOrItems) {
     let nextTitleOrItemIndex = titleOrItemIndex;
 
-    if (code === 'ArrowUp') {
+    if (direction === Direction.Previous) {
       // if no item is focused, focus last item.
       if (titleOrItemIndex === null) {
         return maxNumberOfTitlesOrItems;
@@ -153,7 +168,7 @@ export default class SidebarFilter {
       }
 
       return nextTitleOrItemIndex;
-    } else if (code === 'ArrowDown') {
+    } else if (direction === Direction.Next) {
       // if no item is focused, focus first item.
       if (titleOrItemIndex === null) {
         return 0;
@@ -193,13 +208,6 @@ export default class SidebarFilter {
       element.classList.add(SidebarFilter.CSS.sectionTitleSelected);
     } else if (type === 'item') {
       element.classList.add(SidebarFilter.CSS.sectionListItemSlelected);
-      // close section.
-      const parentSection = element.closest('section');
-
-      // if item is in collapsed section, expand it.
-      if (!parentSection.classList.contains(SidebarFilter.CSS.sectionTitleActive)) {
-        this.setSectionCollapsed(parentSection, false);
-      }
     }
 
     // scroll to focused title or item.
@@ -270,6 +278,17 @@ export default class SidebarFilter {
   }
 
   /**
+   * Check if content contains search text.
+   *
+   * @param {string} content - content to be searched.
+   * @param {string} searchValue - Search value.
+   * @returns {boolean} - true if content contains search value.
+   */
+  isValueMatched(content, searchValue) {
+    return content.toLowerCase().indexOf(searchValue.toLowerCase()) !== -1;
+  }
+
+  /**
    * filter sidebar items.
    *
    * @param {HTMLElement} section - Section element.
@@ -281,8 +300,8 @@ export default class SidebarFilter {
     const sectionList = section.querySelector('.' + SidebarFilter.CSS.sectionList);
 
     // check if section title matches.
-    const isTitleMatch = sectionTitle.innerText.trim().toLowerCase()
-      .indexOf(searchValue.toLowerCase()) !== -1;
+    const isTitleMatch = this.isValueMatched(sectionTitle.textContent, searchValue);
+
     const matchResults = [];
     // match with section items.
     let isSingleItemMatch = false;
@@ -291,8 +310,7 @@ export default class SidebarFilter {
       const sectionListItems = sectionList.querySelectorAll('.' + SidebarFilter.CSS.sectionListItem);
 
       sectionListItems.forEach(item => {
-        if (item.innerText.trim().toLowerCase()
-          .indexOf(searchValue.toLowerCase()) !== -1) {
+        if (this.isValueMatched(item.textContent, searchValue)) {
           // remove hiden class from item.
           item.parentElement.classList.remove(SidebarFilter.CSS.sectionListItemWrapperHidden);
           // add item to search results.
@@ -308,10 +326,16 @@ export default class SidebarFilter {
       });
     }
     if (!isTitleMatch && !isSingleItemMatch) {
-      // hide section and it's items are not a match.
+      // hide section if it's items are not a match.
       section.classList.add(SidebarFilter.CSS.sectionHidden);
     } else {
-      // show section and it's items are a match.
+      const parentSection = sectionTitle.closest('section');
+
+      // if item is in collapsed section, expand it.
+      if (!parentSection.classList.contains(SidebarFilter.CSS.sectionTitleActive)) {
+        this.setSectionCollapsed(parentSection, false);
+      }
+      // show section if it's items are a match.
       section.classList.remove(SidebarFilter.CSS.sectionHidden);
       // add section title to search results.
       this.searchResults.push({

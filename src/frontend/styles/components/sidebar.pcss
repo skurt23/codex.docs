@@ -81,26 +81,17 @@
     background-color: var(--color-input-primary);
     border: 1px solid transparent;
     border-radius: 8px;
-    padding: 8px 35px;
-    padding-right: 45px;
-    line-height: 21px;
+    padding: 8.5px 35px;
+    padding-right: 42px;
+    line-height: 17px;
 
-    &-wrapper-mac::after {
+    &-wrapper::after {
       color: var(--color-button-secondary);
       font-weight: 400;
       font-size: 14px;
       line-height: 17px;
-      content: "⌘ P";
-      margin-left: -50px;
-    }
-
-    &-wrapper-other::after {
-      color: var(--color-button-secondary);
-      font-weight: 400;
-      font-size: 14px;
-      line-height: 17px;
-      content: "Ctrl P";
-      margin-left: -50px;
+      content: attr(data-shortcut);
+      margin-left: -42px;
     }
   }
 
@@ -155,7 +146,7 @@
     line-height: 21px;
     height: 29px;
 
-    @media (--mobile){
+    @media (--mobile) {
       font-size: 16px;
       line-height: 21px;
     }
@@ -277,7 +268,9 @@
   &__slider {
     display: none;
     position: fixed;
-    transform: translateX(calc(var(--layout-sidebar-width) + var(--hide-sidebar-toggler-offset)));
+    transform: translateX(
+      calc(var(--layout-sidebar-width) + var(--hide-sidebar-toggler-offset))
+    );
     bottom: var(--hide-sidebar-toggler-offset);
     width: var(--hide-sidebar-toggler-size);
     height: var(--hide-sidebar-toggler-size);
